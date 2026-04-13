@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Akeja Congregation — Schedule Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #F7F4EE;
+      --ink: #1A1A18;
+      --ink-muted: #5C5C54;
+      --ink-faint: #A8A89E;
+      --gold: #B08D3C;
+      --gold-light: #F0E6C8;
+      --border: #DDD8CC;
+      --white: #FFFFFF;
+      --green: #2D6A4F;
+      --green-light: #D8EDE4;
+      --red: #8B2E2E;
+      --red-light: #F5DADA;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      padding: 32px 40px 28px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-end;
+      gap: 20px;
+    }
+    .header-cross {
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+      opacity: 0.35;
+    }
+    .header-text {
+      line-height: 1;
+    }
+    .header-text .eyebrow {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      color: var(--ink-faint);
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+    .header-text h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px;
+      font-weight: 400;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+    }
+
+    /* ── Main layout ── */
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      max-width: 960px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 48px 40px;
+    }
+
+    @media (max-width: 680px) {
+      main { grid-template-columns: 1fr; padding: 32px 20px; }
+      header { padding: 24px 20px; }
+    }
+
+    /* ── Left panel ── */
+    .panel-left {
+      padding-right: 48px;
+      border-right: 1px solid var(--border);
+    }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      color: var(--ink-faint);
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    /* Month selector */
+    .month-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 36px;
+    }
+    .month-btn {
+      padding: 10px 12px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--ink-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: left;
+    }
+    .month-btn:hover {
+      border-color: var(--gold);
+      color: var(--ink);
+    }
+    .month-btn.active {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: var(--white);
+      font-weight: 500;
+    }
+
+    /* ── Right panel ── */
+    .panel-right {
+      padding-left: 48px;
+    }
+
+    /* Textarea */
+    .field-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--ink-muted);
+      margin-bottom: 8px;
+      display: block;
+    }
+    textarea {
+      width: 100%;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      color: var(--ink);
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      resize: vertical;
+      min-height: 180px;
+      line-height: 1.6;
+      transition: border-color 0.15s;
+      outline: none;
+    }
+    textarea:focus { border-color: var(--ink-muted); }
+    textarea::placeholder { color: var(--ink-faint); }
+
+    /* File upload */
+    .upload-area {
+      margin-top: 12px;
+      border: 1px dashed var(--border);
+      border-radius: 6px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      background: transparent;
+    }
+    .upload-area:hover { border-color: var(--gold); background: var(--gold-light); }
+    .upload-area.has-file { border-color: var(--green); background: var(--green-light); border-style: solid; }
+    .upload-area input[type="file"] { display: none; }
+    .upload-icon {
+      width: 16px; height: 16px;
+      color: var(--ink-faint);
+      flex-shrink: 0;
+    }
+    .upload-area.has-file .upload-icon { color: var(--green); }
+    .upload-text { font-size: 12px; color: var(--ink-muted); }
+    .upload-area.has-file .upload-text { color: var(--green); font-weight: 500; }
+    .upload-hint { font-size: 11px; color: var(--ink-faint); margin-top: 4px; }
+    .clear-file {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--ink-faint);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .clear-file:hover { color: var(--red); background: var(--red-light); }
+
+    /* Divider */
+    .or-divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 12px 0;
+      font-size: 11px;
+      color: var(--ink-faint);
+    }
+    .or-divider::before, .or-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Generate button */
+    .generate-btn {
+      margin-top: 24px;
+      width: 100%;
+      padding: 13px;
+      background: var(--ink);
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+      transition: opacity 0.15s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .generate-btn:hover { opacity: 0.88; }
+    .generate-btn:active { transform: scale(0.99); }
+    .generate-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* Spinner */
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Status message */
+    .status {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      display: none;
+    }
+    .status.error {
+      background: var(--red-light);
+      color: var(--red);
+      border: 1px solid #E8C0C0;
+      display: block;
+    }
+    .status.success {
+      background: var(--green-light);
+      color: var(--green);
+      border: 1px solid #B8DDD0;
+      display: block;
+    }
+
+    /* Progress bar */
+    .progress-wrap {
+      margin-top: 14px;
+      display: none;
+    }
+    .progress-wrap.visible { display: block; }
+    .progress-label {
+      font-size: 11px;
+      color: var(--ink-faint);
+      margin-bottom: 6px;
+    }
+    .progress-bar {
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--gold);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.4s ease;
+      animation: indeterminate 1.5s ease infinite;
+    }
+    @keyframes indeterminate {
+      0% { transform: translateX(-100%); width: 40%; }
+      100% { transform: translateX(300%); width: 40%; }
+    }
+
+    /* Footer */
+    footer {
+      padding: 20px 40px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--ink-faint);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <svg class="header-cross" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="15" y="2" width="6" height="32" rx="1" fill="currentColor"/>
+    <rect x="2" y="11" width="32" height="6" rx="1" fill="currentColor"/>
+  </svg>
+  <div class="header-text">
+    <p class="eyebrow">Akeja Congregation</p>
+    <h1>Midweek Schedule Generator</h1>
+  </div>
+</header>
+
+<main>
+  <!-- Left: month selector -->
+  <div class="panel-left">
+    <p class="section-label">Select month</p>
+    <div class="month-grid" id="monthGrid">
+      <button class="month-btn" data-month="January">January</button>
+      <button class="month-btn" data-month="March">March</button>
+      <button class="month-btn" data-month="May">May</button>
+      <button class="month-btn" data-month="July">July</button>
+      <button class="month-btn" data-month="September">September</button>
+      <button class="month-btn" data-month="November">November</button>
+    </div>
+
+    <p style="font-size:12px;color:var(--ink-faint);line-height:1.6;">
+      Fetches the latest workbook content for the selected month from
+      <span style="color:var(--ink-muted)">wol.jw.org</span> and generates a
+      formatted Word document for the congregation schedule.
+    </p>
+  </div>
+
+  <!-- Right: assignments + generate -->
+  <div class="panel-right">
+    <p class="section-label">Assignments <span style="font-weight:300;text-transform:none;letter-spacing:0;color:var(--ink-faint);font-size:11px;">(optional)</span></p>
+
+    <label class="field-label">Paste assignment text</label>
+    <textarea id="assignmentsText" placeholder="04/05/2026&#10;(3) B.R...Bassey Ubong&#10;(4) S.C...Tracy Abieba/Elizabeth Odu&#10;..."></textarea>
+
+    <div class="or-divider">or upload a file</div>
+
+    <label class="upload-area" id="uploadArea" for="fileInput">
+      <svg class="upload-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M2 10v3a1 1 0 001 1h10a1 1 0 001-1v-3M8 2v8M5 5l3-3 3 3"/>
+      </svg>
+      <div>
+        <p class="upload-text" id="uploadText">Upload .txt file</p>
+        <p class="upload-hint" id="uploadHint">Click to browse</p>
+      </div>
+      <button class="clear-file" id="clearFile" style="display:none" onclick="clearFileInput(event)">Remove</button>
+      <input type="file" id="fileInput" accept=".txt" onchange="handleFileSelect(this)" />
+    </label>
+
+    <button class="generate-btn" id="generateBtn" onclick="generate()">
+      <span id="btnText">Generate document</span>
+      <div class="spinner" id="spinner"></div>
+    </button>
+
+    <div class="progress-wrap" id="progressWrap">
+      <p class="progress-label" id="progressLabel">Fetching workbook content…</p>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+
+    <div class="status" id="statusMsg"></div>
+  </div>
+</main>
+
+<footer>
+  Life &amp; Ministry Meeting Workbook 2026 &nbsp;·&nbsp; wol.jw.org
+</footer>
+
+<script>
+  let selectedMonth = null;
+  let selectedFile = null;
+
+  // Month selection
+  document.getElementById('monthGrid').addEventListener('click', e => {
+    const btn = e.target.closest('.month-btn');
+    if (!btn) return;
+    document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedMonth = btn.dataset.month;
+    clearStatus();
+  });
+
+  function handleFileSelect(input) {
+    if (input.files.length === 0) return;
+    selectedFile = input.files[0];
+    const area = document.getElementById('uploadArea');
+    area.classList.add('has-file');
+    document.getElementById('uploadText').textContent = selectedFile.name;
+    document.getElementById('uploadHint').textContent = `${(selectedFile.size / 1024).toFixed(1)} KB`;
+    document.getElementById('clearFile').style.display = 'block';
+    document.getElementById('assignmentsText').value = '';
+    document.getElementById('assignmentsText').disabled = true;
+    clearStatus();
+  }
+
+  function clearFileInput(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    selectedFile = null;
+    document.getElementById('fileInput').value = '';
+    const area = document.getElementById('uploadArea');
+    area.classList.remove('has-file');
+    document.getElementById('uploadText').textContent = 'Upload .txt file';
+    document.getElementById('uploadHint').textContent = 'Click to browse';
+    document.getElementById('clearFile').style.display = 'none';
+    document.getElementById('assignmentsText').disabled = false;
+  }
+
+  function clearStatus() {
+    const s = document.getElementById('statusMsg');
+    s.className = 'status';
+    s.textContent = '';
+  }
+
+  function setLoading(on) {
+    const btn = document.getElementById('generateBtn');
+    const spinner = document.getElementById('spinner');
+    const btnText = document.getElementById('btnText');
+    const progress = document.getElementById('progressWrap');
+    btn.disabled = on;
+    spinner.style.display = on ? 'block' : 'none';
+    btnText.textContent = on ? 'Generating…' : 'Generate document';
+    progress.classList.toggle('visible', on);
+  }
+
+  async function generate() {
+    if (!selectedMonth) {
+      showStatus('error', 'Please select a month first.');
+      return;
+    }
+    clearStatus();
+    setLoading(true);
+    document.getElementById('progressLabel').textContent = 'Fetching workbook from wol.jw.org…';
+
+    const form = new FormData();
+    form.append('month', selectedMonth);
+
+    if (selectedFile) {
+      form.append('assignments_file', selectedFile);
+    } else {
+      form.append('assignments', document.getElementById('assignmentsText').value);
+    }
+
+    try {
+      const res = await fetch('/generate', { method: 'POST', body: form });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: 'Unknown error' }));
+        showStatus('error', err.detail || 'Something went wrong.');
+        return;
+      }
+
+      document.getElementById('progressLabel').textContent = 'Building Word document…';
+
+      const blob = await res.blob();
+      const disposition = res.headers.get('Content-Disposition') || '';
+      const match = disposition.match(/filename="(.+?)"/);
+      const filename = match ? match[1] : `${selectedMonth}_2026.docx`;
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      showStatus('success', `${filename} downloaded successfully.`);
+    } catch (err) {
+      showStatus('error', 'Network error — is the server running?');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function showStatus(type, msg) {
+    const s = document.getElementById('statusMsg');
+    s.className = `status ${type}`;
+    s.textContent = msg;
+  }
+</script>
+</body>
+</html>

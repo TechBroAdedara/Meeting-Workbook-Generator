@@ -1,0 +1,12 @@
+[project]
+name = "meeting-workbook-generator"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "aiohttp>=3.13.5",
+    "fastapi>=0.135.3",
+    "python-multipart>=0.0.26",
+    "uvicorn[standard]>=0.44.0",
+]

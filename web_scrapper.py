@@ -124,7 +124,7 @@ async def _parse_week_content(url: str):
 async def parse_workbook_url(month: Literal["January", "March", "May", "July", "September", "November"]):
     print("Getting contents of url ...")
     soup = await _parse_url(
-        f"https://wol.jw.org/en/wol/library/r1/lp-e/all-publications/meeting-workbooks/life-and-ministry-meeting-workbook-{str(datetime.now().year)}/" + month.lower())
+        f"https://wol.jw.org/en/wol/library/r1/lp-e/all-publications/meeting-workbooks/life-and-ministry-meeting-workbook-2026/" + month.lower())
 
     cover_title, dates, links_per_page = await _extract_weeks_and_content(soup)
 
