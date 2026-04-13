@@ -17,6 +17,8 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from collections.abc import Sequence
 
+from icecream import ic
+
 # ---------------------------------------------------------------------------
 # APP
 # ---------------------------------------------------------------------------
@@ -368,7 +370,8 @@ async def generate(
     try:
         cover_title, workbook_contents = await parse_workbook_url(month)
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Failed to fetch workbook: {str(e)}")
+        ic(f"Failed to fetch workbook: {str(e)}")
+        raise HTTPException(status_code=502, detail=f"Failed to fetch workbook. It seems like there is a problem with your network connection.")
 
     buffer = build_document(cover_title, workbook_contents, parsed_assignments)
 
