@@ -41,15 +41,7 @@
       align-items: flex-end;
       gap: 20px;
     }
-    .header-cross {
-      width: 36px;
-      height: 36px;
-      flex-shrink: 0;
-      opacity: 0.35;
-    }
-    .header-text {
-      line-height: 1;
-    }
+    .header-text { line-height: 1; }
     .header-text .eyebrow {
       font-size: 10px;
       font-weight: 500;
@@ -95,7 +87,37 @@
       letter-spacing: 0.12em;
       color: var(--ink-faint);
       text-transform: uppercase;
-      margin-bottom: 20px;
+      margin-bottom: 14px;
+    }
+
+    /* ── Language toggle ── */
+    .lang-toggle {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 24px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 4px;
+    }
+    .lang-btn {
+      flex: 1;
+      padding: 7px 10px;
+      border: none;
+      border-radius: 5px;
+      background: transparent;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--ink-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .lang-btn:hover { color: var(--ink); }
+    .lang-btn.active {
+      background: var(--ink);
+      color: var(--white);
+      font-weight: 500;
     }
 
     /* Month selector */
@@ -118,10 +140,7 @@
       transition: all 0.15s;
       text-align: left;
     }
-    .month-btn:hover {
-      border-color: var(--gold);
-      color: var(--ink);
-    }
+    .month-btn:hover { border-color: var(--gold); color: var(--ink); }
     .month-btn.active {
       background: var(--ink);
       border-color: var(--ink);
@@ -130,11 +149,8 @@
     }
 
     /* ── Right panel ── */
-    .panel-right {
-      padding-left: 48px;
-    }
+    .panel-right { padding-left: 48px; }
 
-    /* Textarea */
     .field-label {
       font-size: 12px;
       font-weight: 500;
@@ -160,7 +176,6 @@
     textarea:focus { border-color: var(--ink-muted); }
     textarea::placeholder { color: var(--ink-faint); }
 
-    /* File upload */
     .upload-area {
       margin-top: 12px;
       border: 1px dashed var(--border);
@@ -176,11 +191,7 @@
     .upload-area:hover { border-color: var(--gold); background: var(--gold-light); }
     .upload-area.has-file { border-color: var(--green); background: var(--green-light); border-style: solid; }
     .upload-area input[type="file"] { display: none; }
-    .upload-icon {
-      width: 16px; height: 16px;
-      color: var(--ink-faint);
-      flex-shrink: 0;
-    }
+    .upload-icon { width: 16px; height: 16px; color: var(--ink-faint); flex-shrink: 0; }
     .upload-area.has-file .upload-icon { color: var(--green); }
     .upload-text { font-size: 12px; color: var(--ink-muted); }
     .upload-area.has-file .upload-text { color: var(--green); font-weight: 500; }
@@ -197,7 +208,6 @@
     }
     .clear-file:hover { color: var(--red); background: var(--red-light); }
 
-    /* Divider */
     .or-divider {
       display: flex;
       align-items: center;
@@ -213,7 +223,6 @@
       background: var(--border);
     }
 
-    /* Generate button */
     .generate-btn {
       margin-top: 24px;
       width: 100%;
@@ -237,7 +246,6 @@
     .generate-btn:active { transform: scale(0.99); }
     .generate-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
-    /* Spinner */
     .spinner {
       width: 14px; height: 14px;
       border: 2px solid rgba(255,255,255,0.3);
@@ -248,7 +256,6 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Status message */
     .status {
       margin-top: 14px;
       padding: 12px 14px;
@@ -256,42 +263,18 @@
       font-size: 13px;
       display: none;
     }
-    .status.error {
-      background: var(--red-light);
-      color: var(--red);
-      border: 1px solid #E8C0C0;
-      display: block;
-    }
-    .status.success {
-      background: var(--green-light);
-      color: var(--green);
-      border: 1px solid #B8DDD0;
-      display: block;
-    }
+    .status.error { background: var(--red-light); color: var(--red); border: 1px solid #E8C0C0; display: block; }
+    .status.success { background: var(--green-light); color: var(--green); border: 1px solid #B8DDD0; display: block; }
 
-    /* Progress bar */
-    .progress-wrap {
-      margin-top: 14px;
-      display: none;
-    }
+    .progress-wrap { margin-top: 14px; display: none; }
     .progress-wrap.visible { display: block; }
-    .progress-label {
-      font-size: 11px;
-      color: var(--ink-faint);
-      margin-bottom: 6px;
-    }
-    .progress-bar {
-      height: 3px;
-      background: var(--border);
-      border-radius: 2px;
-      overflow: hidden;
-    }
+    .progress-label { font-size: 11px; color: var(--ink-faint); margin-bottom: 6px; }
+    .progress-bar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
     .progress-fill {
       height: 100%;
       background: var(--gold);
       border-radius: 2px;
       width: 0%;
-      transition: width 0.4s ease;
       animation: indeterminate 1.5s ease infinite;
     }
     @keyframes indeterminate {
@@ -299,7 +282,6 @@
       100% { transform: translateX(300%); width: 40%; }
     }
 
-    /* Footer */
     footer {
       padding: 20px 40px;
       border-top: 1px solid var(--border);
@@ -319,17 +301,17 @@
 </header>
 
 <main>
-  <!-- Left: month selector -->
+  <!-- Left: language + month selector -->
   <div class="panel-left">
-    <p class="section-label">Select month</p>
-    <div class="month-grid" id="monthGrid">
-      <button class="month-btn" data-month="January">January</button>
-      <button class="month-btn" data-month="March">March</button>
-      <button class="month-btn" data-month="May">May</button>
-      <button class="month-btn" data-month="July">July</button>
-      <button class="month-btn" data-month="September">September</button>
-      <button class="month-btn" data-month="November">November</button>
+
+    <p class="section-label">Language</p>
+    <div class="lang-toggle">
+      <button class="lang-btn active" data-lang="english" onclick="selectLanguage(this)">English</button>
+      <button class="lang-btn" data-lang="yoruba" onclick="selectLanguage(this)">Yorùbá</button>
     </div>
+
+    <p class="section-label">Select month</p>
+    <div class="month-grid" id="monthGrid"></div>
 
     <p style="font-size:12px;color:var(--ink-faint);line-height:1.6;">
       Fetches the latest workbook content for the selected month from
@@ -378,18 +360,44 @@
 </footer>
 
 <script>
+  // Months available per language
+  const MONTHS = {
+    english: ["January", "March", "May", "July", "September", "November"],
+    yoruba:  ["January", "March", "May", "July", "September", "November"],
+  };
+
   let selectedMonth = null;
+  let selectedLanguage = "english";
   let selectedFile = null;
 
-  // Month selection
-  document.getElementById('monthGrid').addEventListener('click', e => {
-    const btn = e.target.closest('.month-btn');
-    if (!btn) return;
+  function selectLanguage(btn) {
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedLanguage = btn.dataset.lang;
+    selectedMonth = null;
+    clearStatus();
+    renderMonths();
+  }
+
+  function renderMonths() {
+    const grid = document.getElementById('monthGrid');
+    grid.innerHTML = '';
+    MONTHS[selectedLanguage].forEach(month => {
+      const btn = document.createElement('button');
+      btn.className = 'month-btn';
+      btn.dataset.month = month;
+      btn.textContent = month;
+      btn.onclick = () => selectMonth(btn);
+      grid.appendChild(btn);
+    });
+  }
+
+  function selectMonth(btn) {
     document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     selectedMonth = btn.dataset.month;
     clearStatus();
-  });
+  }
 
   function handleFileSelect(input) {
     if (input.files.length === 0) return;
@@ -425,13 +433,10 @@
 
   function setLoading(on) {
     const btn = document.getElementById('generateBtn');
-    const spinner = document.getElementById('spinner');
-    const btnText = document.getElementById('btnText');
-    const progress = document.getElementById('progressWrap');
+    document.getElementById('spinner').style.display = on ? 'block' : 'none';
+    document.getElementById('btnText').textContent = on ? 'Generating…' : 'Generate document';
+    document.getElementById('progressWrap').classList.toggle('visible', on);
     btn.disabled = on;
-    spinner.style.display = on ? 'block' : 'none';
-    btnText.textContent = on ? 'Generating…' : 'Generate document';
-    progress.classList.toggle('visible', on);
   }
 
   async function generate() {
@@ -445,6 +450,7 @@
 
     const form = new FormData();
     form.append('month', selectedMonth);
+    form.append('language', selectedLanguage);
 
     if (selectedFile) {
       form.append('assignments_file', selectedFile);
@@ -490,6 +496,9 @@
     s.className = `status ${type}`;
     s.textContent = msg;
   }
+
+  // Initialise month grid on load
+  renderMonths();
 </script>
 </body>
 </html>

@@ -347,7 +347,7 @@ async def generate_word_document():
                     meeting_part_row = add_custom_row(
                         new_table, no_of_cols=cols, divisions=[0.1, 0.6, 0.3]
                     )
-
+ 
                 # Col 0 – row number
                 add_cell_text(
                     meeting_part_row[0], str(row[0]), RGBColor(0, 0, 0), font_size=9

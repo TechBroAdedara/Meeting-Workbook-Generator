@@ -2,6 +2,7 @@ import asyncio
 import re
 import time
 from datetime import datetime
+from email.quoprimime import body_decode
 from typing import Annotated, Literal
 
 import aiohttp
@@ -22,9 +23,12 @@ NUMBERED_ENTRY: re.Pattern = re.compile(r"^(?P<number>\d+)\.\s(?P<value>.*)$")
 async def get_time_excerpt(element: Tag):
     text = element.text.strip()
 
+    sibling = element.find_next_sibling()
+    p_tag = sibling.find("p") if sibling else None
+
     time_duration = await extract_time_duration(
-        element.find_next_sibling().find("p").text.strip()
-    ) if element.find_next_sibling() is not None else ""
+        p_tag.text.strip()
+    ) if p_tag else ""
 
     m = NUMBERED_ENTRY.match(text)
     if not m:
@@ -100,15 +104,20 @@ async def _parse_week_content(url: str):
         print("ERROR FINDING `header` - SKIPPING... ")
         return None
 
-    pattern_for_song = re.compile(r'\bSong\s+\d+')
+    pattern_for_song = re.compile(r'\b(?:Song|Orin|Pese)\s+\d+', re.IGNORECASE)
 
     try:
-        meeting_content = [
-            await get_time_excerpt(element)
-            for element in soup.find(class_="bodyTxt").find_all(class_="du-fontSize--base")
-            if not pattern_for_song.search(element.text.strip())
-        ]
-    except AttributeError:
+        meeting_content = []
+
+        body_of_meeting_week_html = soup.find(class_="bodyTxt").find_all(class_="du-fontSize--base")
+
+        for element in body_of_meeting_week_html:
+            if not pattern_for_song.search(element.text.strip()):
+                time_excerpt = await get_time_excerpt(element)
+                meeting_content.append(time_excerpt)
+
+    except AttributeError as e:
+        print(e)
         print("ERROR FINDING `header` - SKIPPING... ")
         return None
 
@@ -123,8 +132,9 @@ async def _parse_week_content(url: str):
 
 async def parse_workbook_url(month: Literal["January", "March", "May", "July", "September", "November"]):
     print("Getting contents of url ...")
-    soup = await _parse_url(
-        f"https://wol.jw.org/en/wol/library/r1/lp-e/all-publications/meeting-workbooks/life-and-ministry-meeting-workbook-2026/" + month.lower())
+    eng_url: str = "https://wol.jw.org/en/wol/library/r1/lp-e/all-publications/meeting-workbooks/life-and-ministry-meeting-workbook-2026/"
+    yoruba_url: str = "https://wol.jw.org/yo/wol/library/r36/lp-yr/gbogbo-%C3%ACt%E1%BA%B9j%C3%A1de/%C3%ACw%C3%A9-%C3%ACp%C3%A0d%C3%A9/%C3%ACw%C3%A9-%C3%ACp%C3%A0d%C3%A9-%C3%ACgb%C3%A9s%C3%AD-ay%C3%A9-%C3%A0ti-i%E1%B9%A3%E1%BA%B9-%C3%B2j%C3%AD%E1%B9%A3%E1%BA%B9-2026/"
+    soup = await _parse_url(yoruba_url + month.lower())
 
     cover_title, dates, links_per_page = await _extract_weeks_and_content(soup)
 
@@ -137,7 +147,7 @@ async def parse_workbook_url(month: Literal["January", "March", "May", "July", "
 
 
 async def main():
-    for result in await parse_workbook_url("September"):
+    for result in await parse_workbook_url("May"):
         ic(result)
 
 if __name__ == "__main__":

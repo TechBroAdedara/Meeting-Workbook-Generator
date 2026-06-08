@@ -33,6 +33,53 @@ app.add_middleware(
 )
 
 # ---------------------------------------------------------------------------
+# LANGUAGE CONFIG
+# ---------------------------------------------------------------------------
+
+LANGUAGE_CONFIG = {
+    "english": {
+        "base_url": "https://wol.jw.org/",
+        "workbook_path": "en/wol/library/r1/lp-e/all-publications/meeting-workbooks/life-and-ministry-meeting-workbook-2026/{month}",
+        "song_pattern": re.compile(r"\bSong\s+\d+", re.IGNORECASE),
+        "valid_months": {
+            "january", "march", "may", "july", "september", "november"
+        },
+        "section_colors": {
+            "TREASURES FROM GOD'S WORD": (98, 101, 104),
+            "APPLY YOURSELF TO THE FIELD MINISTRY": (189, 142, 22),
+        },
+        "default_section_color": (148, 54, 52),
+    },
+    "yoruba": {
+        "base_url": "https://wol.jw.org/",
+        "workbook_path": (
+            "yo/wol/library/r36/lp-yr/gbogbo-%C3%ACt%E1%BA%B9j%C3%A1de/"
+            "%C3%ACw%C3%A9-%C3%ACp%C3%A0d%C3%A9/%C3%ACw%C3%A9-%C3%ACp%C3%A0d%C3%A9"
+            "-%C3%ACgb%C3%A9s%C3%AD-ay%C3%A9-%C3%A0ti-i%E1%B9%A3%E1%BA%B9"
+            "-%C3%B2j%C3%AD%E1%B9%A3%E1%BA%B9-2026/{month}"
+        ),
+        "song_pattern": re.compile(r"\bOrin\s+\d+", re.IGNORECASE),
+        "valid_months": {
+            # Yoruba month slugs as they appear in the URL
+            "january", "february", "march", "april", "may", "june",
+            "july", "august", "september", "october", "november", "december",
+        },
+        "section_colors": {
+            # Yoruba section header strings
+            "ÀWỌN ÌṢÚRA INÚ Ọ̀RỌ̀ ỌLỌ́RUN": (98, 101, 104),
+            "TẸRA MỌ́ IṢẸ́ ÌWÀÁSÙ": (189, 142, 22),
+        },
+        "default_section_color": (148, 54, 52),
+    },
+}
+
+# Yoruba "Living as Christians" equivalent — used to toggle the 4-col layout
+LIVING_AS_CHRISTIANS_HEADERS = {
+    "english": "LIVING AS CHRISTIANS",
+    "yoruba": "MÁA HÙWÀ TÓ YẸ KRISTẸNI",  # update if the live page differs
+}
+
+# ---------------------------------------------------------------------------
 # WEB SCRAPER
 # ---------------------------------------------------------------------------
 
@@ -45,21 +92,19 @@ async def extract_time_duration(element: str):
     return match.group(0) if match else None
 
 
-async def get_time_excerpt(element: Tag):
+async def get_time_excerpt(element: Tag, song_pattern: re.Pattern):
     text = element.text.strip()
+    sibling = element.find_next_sibling()
+    p_tag = sibling.find("p") if sibling else None
     time_duration = (
-        await extract_time_duration(
-            element.find_next_sibling().find("p").text.strip()
-        )
-        if element.find_next_sibling() is not None
-        else ""
+        await extract_time_duration(p_tag.text.strip()) if p_tag else ""
     )
     m = NUMBERED_ENTRY.match(text)
     if not m:
         return text
     number = int(m["number"])
     value = m["value"]
-    return number, value + " " + time_duration
+    return number, value + " " + (time_duration or "")
 
 
 async def _parse_url(url: str):
@@ -81,21 +126,20 @@ async def _extract_weeks_and_content(soup: BeautifulSoup):
     return cover_title, date_list, links_per_page
 
 
-async def _parse_week_content(url: str):
+async def _parse_week_content(url: str, song_pattern: re.Pattern):
     parse_dict = {}
     soup = await _parse_url(BASE_URL + url)
     try:
         date = soup.find("header").h1.text
     except AttributeError:
         return None
-    pattern_for_song = re.compile(r"\bSong\s+\d+")
     try:
         meeting_content = [
-            await get_time_excerpt(element)
+            await get_time_excerpt(element, song_pattern)
             for element in soup.find(class_="bodyTxt").find_all(
                 class_="du-fontSize--base"
             )
-            if not pattern_for_song.search(element.text.strip())
+            if not song_pattern.search(element.text.strip())
         ]
     except AttributeError:
         return None
@@ -104,17 +148,20 @@ async def _parse_week_content(url: str):
     return parse_dict
 
 
-async def parse_workbook_url(month: str):
-    soup = await _parse_url(
-        f"https://wol.jw.org/en/wol/library/r1/lp-e/all-publications/meeting-workbooks/life-and-ministry-meeting-workbook-2026/{month.lower()}"
-    )
+async def parse_workbook_url(month: str, language: str = "english"):
+    config = LANGUAGE_CONFIG[language]
+    url = config["base_url"] + config["workbook_path"].format(month=month.lower())
+    soup = await _parse_url(url)
     cover_title, dates, links_per_page = await _extract_weeks_and_content(soup)
-    results = await asyncio.gather(*[_parse_week_content(link) for link in links_per_page])
+    song_pattern = config["song_pattern"]
+    results = await asyncio.gather(
+        *[_parse_week_content(link, song_pattern) for link in links_per_page]
+    )
     return cover_title, results
 
 
 # ---------------------------------------------------------------------------
-# ASSIGNMENT PARSER
+# ASSIGNMENT PARSER  (unchanged)
 # ---------------------------------------------------------------------------
 
 SKIP_WEEK_MARKER = "__SKIP_WEEK__"
@@ -235,13 +282,23 @@ def add_custom_row(
     return [table_row_cells[p] for p in partitions_idx]
 
 
-def build_document(cover_title: str, workbook_contents: list, assignments: dict) -> io.BytesIO:
+def build_document(
+    cover_title: str,
+    workbook_contents: list,
+    assignments: dict,
+    language: str = "english",
+) -> io.BytesIO:
     document = Document()
     for section in document.sections:
         section.top_margin = Inches(0.4)
         section.bottom_margin = Inches(0.2)
         section.left_margin = Inches(0.5)
         section.right_margin = Inches(0.5)
+
+    config = LANGUAGE_CONFIG[language]
+    section_colors: dict = config["section_colors"]
+    default_section_color: tuple = config["default_section_color"]
+    living_as_christians_header = LIVING_AS_CHRISTIANS_HEADERS[language]
 
     partner_assignment_pattern = re.compile(
         "Starting a Con|Following Up|Explaining Your|Making Disciples"
@@ -286,15 +343,11 @@ def build_document(cover_title: str, workbook_contents: list, assignments: dict)
         is_after_living_as_christians = False
 
         for row in record["main_table"]:
-            if row == "LIVING AS CHRISTIANS":
+            if row == living_as_christians_header:
                 is_after_living_as_christians = True
 
             if type(row) is not tuple:
-                rgb_color = (
-                    (98, 101, 104) if str(row) == "TREASURES FROM GOD'S WORD"
-                    else ((189, 142, 22) if str(row) == "APPLY YOURSELF TO THE FIELD MINISTRY"
-                    else (148, 54, 52))
-                )
+                rgb_color = section_colors.get(str(row), default_section_color)
                 subheading_row = add_custom_row(new_table, cols, [0.7, 0.3])
                 set_cell_background(subheading_row[0], rgb_color=rgb_color)
                 add_cell_text(subheading_row[0], str(row), bold=True, font_size=11)
@@ -341,7 +394,9 @@ def build_document(cover_title: str, workbook_contents: list, assignments: dict)
 # ROUTES
 # ---------------------------------------------------------------------------
 
-VALID_MONTHS = ["january", "march", "may", "july", "september", "november"]
+VALID_MONTHS_ENGLISH = {"january", "march", "may", "july", "september", "november"}
+# The Yoruba workbook URL uses the same English month slugs
+VALID_MONTHS_YORUBA = {"january", "march", "may", "july", "september", "november"}
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -355,11 +410,16 @@ async def generate(
     month: str = Form(...),
     assignments: str = Form(""),
     assignments_file: UploadFile = File(None),
+    language: str = Form("english"),
 ):
-    if month.lower() not in VALID_MONTHS:
-        raise HTTPException(status_code=400, detail=f"Invalid month: {month}")
+    language = language.lower()
+    if language not in LANGUAGE_CONFIG:
+        raise HTTPException(status_code=400, detail=f"Unsupported language: {language}. Choose 'english' or 'yoruba'.")
 
-    # Prefer uploaded file over pasted text
+    valid_months = LANGUAGE_CONFIG[language]["valid_months"]
+    if month.lower() not in valid_months:
+        raise HTTPException(status_code=400, detail=f"Invalid month for {language}: {month}")
+
     assignment_text = assignments
     if assignments_file and assignments_file.filename:
         content = await assignments_file.read()
@@ -368,14 +428,13 @@ async def generate(
     parsed_assignments = parse_assignments(assignment_text) if assignment_text.strip() else {}
 
     try:
-        cover_title, workbook_contents = await parse_workbook_url(month)
+        cover_title, workbook_contents = await parse_workbook_url(month, language)
     except Exception as e:
         ic(f"Failed to fetch workbook: {str(e)}")
-        raise HTTPException(status_code=502, detail=f"Failed to fetch workbook. It seems like there is a problem with your network connection.")
+        raise HTTPException(status_code=502, detail="Failed to fetch workbook. It seems like there is a problem with your network connection.")
 
-    buffer = build_document(cover_title, workbook_contents, parsed_assignments)
+    buffer = build_document(cover_title, workbook_contents, parsed_assignments, language)
 
-    # HTTP headers must be latin-1 safe — replace problem chars like em dashes
     safe_title = cover_title.encode("latin-1", errors="replace").decode("latin-1")
     filename = f"{safe_title}.docx"
 
