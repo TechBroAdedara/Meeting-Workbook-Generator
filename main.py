@@ -41,9 +41,7 @@ LANGUAGE_CONFIG = {
         "base_url": "https://wol.jw.org/",
         "workbook_path": "en/wol/library/r1/lp-e/all-publications/meeting-workbooks/life-and-ministry-meeting-workbook-2026/{month}",
         "song_pattern": re.compile(r"\bSong\s+\d+", re.IGNORECASE),
-        "valid_months": {
-            "january", "march", "may", "july", "september", "november"
-        },
+        "valid_months": {"january", "march", "may", "july", "september", "november"},
         "section_colors": {
             "TREASURES FROM GOD'S WORD": (98, 101, 104),
             "APPLY YOURSELF TO THE FIELD MINISTRY": (189, 142, 22),
@@ -61,8 +59,18 @@ LANGUAGE_CONFIG = {
         "song_pattern": re.compile(r"\bOrin\s+\d+", re.IGNORECASE),
         "valid_months": {
             # Yoruba month slugs as they appear in the URL
-            "january", "february", "march", "april", "may", "june",
-            "july", "august", "september", "october", "november", "december",
+            "january",
+            "february",
+            "march",
+            "april",
+            "may",
+            "june",
+            "july",
+            "august",
+            "september",
+            "october",
+            "november",
+            "december",
         },
         "section_colors": {
             # Yoruba section header strings
@@ -83,7 +91,7 @@ LIVING_AS_CHRISTIANS_HEADERS = {
 # WEB SCRAPER
 # ---------------------------------------------------------------------------
 
-BASE_URL = "https://wol.jw.org/"
+BASE_URL = "https://wol.jw.org"
 NUMBERED_ENTRY: re.Pattern = re.compile(r"^(?P<number>\d+)\.\s(?P<value>.*)$")
 
 
@@ -96,9 +104,7 @@ async def get_time_excerpt(element: Tag, song_pattern: re.Pattern):
     text = element.text.strip()
     sibling = element.find_next_sibling()
     p_tag = sibling.find("p") if sibling else None
-    time_duration = (
-        await extract_time_duration(p_tag.text.strip()) if p_tag else ""
-    )
+    time_duration = await extract_time_duration(p_tag.text.strip()) if p_tag else ""
     m = NUMBERED_ENTRY.match(text)
     if not m:
         return text
@@ -225,6 +231,7 @@ def find_assignments_for_date(scraped_date: str, assignments: dict):
 # DOCX BUILDER
 # ---------------------------------------------------------------------------
 
+
 def rgb_to_hex(rgb_color: tuple):
     return "{:02X}{:02X}{:02X}".format(*rgb_color)
 
@@ -309,7 +316,9 @@ def build_document(
 
     cols = 24
 
-    heading = document.add_heading("AKEJA CONGREGATION MIDWEEK MEETING SCHEDULE", level=1)
+    heading = document.add_heading(
+        "AKEJA CONGREGATION MIDWEEK MEETING SCHEDULE", level=1
+    )
     heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
     heading.paragraph_format.space_after = Pt(4)
     heading.runs[0].font.color.rgb = RGBColor(0, 0, 0)
@@ -326,7 +335,9 @@ def build_document(
 
         week_assignments = find_assignments_for_date(record["date"], assignments)
         is_skip_week = week_assignments == SKIP_WEEK_MARKER
-        name_map: dict = {} if (week_assignments is None or is_skip_week) else week_assignments
+        name_map: dict = (
+            {} if (week_assignments is None or is_skip_week) else week_assignments
+        )
 
         new_table = document.add_table(cols=cols, rows=0)
 
@@ -334,11 +345,26 @@ def build_document(
         date_label = record["date"]
         if is_skip_week:
             date_label += " — WEEK OF REGIONAL CONVENTION"
-        add_cell_text(cell=hdr_partitions[0], text=str(date_label), bold=True, text_color=RGBColor(0, 0, 0))
+        add_cell_text(
+            cell=hdr_partitions[0],
+            text=str(date_label),
+            bold=True,
+            text_color=RGBColor(0, 0, 0),
+        )
 
         first_row = add_custom_row(new_table, cols, divisions=[0.8, 0.2])
-        add_cell_text(cell=first_row[0], text="Chairman's Opening Comments - 1 min & Prayer", text_color=RGBColor(0, 0, 0), bold=True)
-        add_cell_text(cell=first_row[1], text="Stephen Adeloro", font_size=11, text_color=RGBColor(0, 0, 0))
+        add_cell_text(
+            cell=first_row[0],
+            text="Chairman's Opening Comments - 1 min & Prayer",
+            text_color=RGBColor(0, 0, 0),
+            bold=True,
+        )
+        add_cell_text(
+            cell=first_row[1],
+            text="Stephen Adeloro",
+            font_size=11,
+            text_color=RGBColor(0, 0, 0),
+        )
 
         is_after_living_as_christians = False
 
@@ -354,28 +380,67 @@ def build_document(
             else:
                 row_number = int(row[0])
                 assigned_name = name_map.get(row_number, "")
-                use_four_cols = not (is_after_living_as_christians or str(row[0]) in {"1", "2"})
+                use_four_cols = not (
+                    is_after_living_as_christians or str(row[0]) in {"1", "2"}
+                )
 
                 if use_four_cols:
-                    meeting_part_row = add_custom_row(new_table, no_of_cols=cols, divisions=[0.1, 0.45, 0.15, 0.3])
+                    meeting_part_row = add_custom_row(
+                        new_table, no_of_cols=cols, divisions=[0.1, 0.45, 0.15, 0.3]
+                    )
                 else:
-                    meeting_part_row = add_custom_row(new_table, no_of_cols=cols, divisions=[0.1, 0.6, 0.3])
+                    meeting_part_row = add_custom_row(
+                        new_table, no_of_cols=cols, divisions=[0.1, 0.6, 0.3]
+                    )
 
-                add_cell_text(meeting_part_row[0], str(row[0]), RGBColor(0, 0, 0), font_size=9)
-                add_cell_text(meeting_part_row[1], str(row[1]), RGBColor(0, 0, 0), font_size=(11 if len(str(row[1])) < 50 else 10))
+                add_cell_text(
+                    meeting_part_row[0], str(row[0]), RGBColor(0, 0, 0), font_size=9
+                )
+                add_cell_text(
+                    meeting_part_row[1],
+                    str(row[1]),
+                    RGBColor(0, 0, 0),
+                    font_size=(11 if len(str(row[1])) < 50 else 10),
+                )
 
                 if use_four_cols:
                     student_partner_text = (
-                        "Student/Partner" if partner_assignment_pattern.match(str(row[1]))
-                        else ("Student" if single_assignment_pattern.match(str(row[1])) else "")
+                        "Student/Partner"
+                        if partner_assignment_pattern.match(str(row[1]))
+                        else (
+                            "Student"
+                            if single_assignment_pattern.match(str(row[1]))
+                            else ""
+                        )
                     )
-                    add_cell_text(meeting_part_row[2], text=student_partner_text, text_color=RGBColor(0, 0, 0), font_size=9)
-                    add_cell_text(meeting_part_row[3], text=assigned_name, text_color=RGBColor(0, 0, 0), font_size=10)
+                    add_cell_text(
+                        meeting_part_row[2],
+                        text=student_partner_text,
+                        text_color=RGBColor(0, 0, 0),
+                        font_size=9,
+                    )
+                    add_cell_text(
+                        meeting_part_row[3],
+                        text=assigned_name,
+                        text_color=RGBColor(0, 0, 0),
+                        font_size=10,
+                    )
                 else:
-                    add_cell_text(meeting_part_row[2], text=assigned_name, text_color=RGBColor(0, 0, 0), font_size=10)
+                    add_cell_text(
+                        meeting_part_row[2],
+                        text=assigned_name,
+                        text_color=RGBColor(0, 0, 0),
+                        font_size=10,
+                    )
 
         last_row = add_custom_row(new_table, cols, [0.1, 0.6, 0.3])
-        add_cell_text(last_row[1], text="• Review/Preview/Announcements - (3 min.) ", bold=True, text_color=RGBColor(0, 0, 0), font_size=11)
+        add_cell_text(
+            last_row[1],
+            text="• Review/Preview/Announcements - (3 min.) ",
+            bold=True,
+            text_color=RGBColor(0, 0, 0),
+            font_size=11,
+        )
 
         count += 1
         if count % 2 == 1:
@@ -414,26 +479,38 @@ async def generate(
 ):
     language = language.lower()
     if language not in LANGUAGE_CONFIG:
-        raise HTTPException(status_code=400, detail=f"Unsupported language: {language}. Choose 'english' or 'yoruba'.")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported language: {language}. Choose 'english' or 'yoruba'.",
+        )
 
     valid_months = LANGUAGE_CONFIG[language]["valid_months"]
     if month.lower() not in valid_months:
-        raise HTTPException(status_code=400, detail=f"Invalid month for {language}: {month}")
+        raise HTTPException(
+            status_code=400, detail=f"Invalid month for {language}: {month}"
+        )
 
     assignment_text = assignments
     if assignments_file and assignments_file.filename:
         content = await assignments_file.read()
         assignment_text = content.decode("utf-8", errors="ignore")
 
-    parsed_assignments = parse_assignments(assignment_text) if assignment_text.strip() else {}
+    parsed_assignments = (
+        parse_assignments(assignment_text) if assignment_text.strip() else {}
+    )
 
     try:
         cover_title, workbook_contents = await parse_workbook_url(month, language)
     except Exception as e:
         ic(f"Failed to fetch workbook: {str(e)}")
-        raise HTTPException(status_code=502, detail="Failed to fetch workbook. It seems like there is a problem with your network connection.")
+        raise HTTPException(
+            status_code=502,
+            detail="Failed to fetch workbook. It seems like there is a problem with your network connection.",
+        )
 
-    buffer = build_document(cover_title, workbook_contents, parsed_assignments, language)
+    buffer = build_document(
+        cover_title, workbook_contents, parsed_assignments, language
+    )
 
     safe_title = cover_title.encode("latin-1", errors="replace").decode("latin-1")
     filename = f"{safe_title}.docx"

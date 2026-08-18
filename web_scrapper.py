@@ -9,7 +9,7 @@ import aiohttp
 from bs4 import BeautifulSoup, Tag
 from icecream import ic
 
-BASE_URL = "https://wol.jw.org/"
+BASE_URL = "https://wol.jw.org"
 
 
 async def extract_time_duration(element: str):
@@ -26,15 +26,13 @@ async def get_time_excerpt(element: Tag):
     sibling = element.find_next_sibling()
     p_tag = sibling.find("p") if sibling else None
 
-    time_duration = await extract_time_duration(
-        p_tag.text.strip()
-    ) if p_tag else ""
+    time_duration = await extract_time_duration(p_tag.text.strip()) if p_tag else ""
 
     m = NUMBERED_ENTRY.match(text)
     if not m:
         return text
-    number = int(m['number'])
-    value = m['value']
+    number = int(m["number"])
+    value = m["value"]
     return number, value + " " + time_duration
 
 
@@ -45,10 +43,12 @@ async def _parse_url(url: str):
             return BeautifulSoup(html, "html.parser")
 
 
-async def _extract_weeks_and_content(soup: BeautifulSoup) -> tuple[
+async def _extract_weeks_and_content(
+    soup: BeautifulSoup,
+) -> tuple[
     Annotated[str, "Cover Page Title"],
     Annotated[list, "List containing dates of each of the weeks"],
-    Annotated[list, "List containing the links of each of the weeks"]
+    Annotated[list, "List containing the links of each of the weeks"],
 ]:
     """
     Takes the soup object parsed from the url and extracts the number of weeks as well as the titles of each week.
@@ -60,30 +60,27 @@ async def _extract_weeks_and_content(soup: BeautifulSoup) -> tuple[
     :return: list - List of links for each week
     """
 
-    weeks = soup.find_all(class_=["row", "card"])  # Finding all the elements that contain the week content
-    no_of_weeks = len(weeks) - 1 # Excluding the cover page gotten from the url
+    weeks = soup.find_all(
+        class_=["row", "card"]
+    )  # Finding all the elements that contain the week content
+    no_of_weeks = len(weeks) - 1  # Excluding the cover page gotten from the url
     print("Number of weeks in the month: ", no_of_weeks, "\n\n")
 
     cover_page = weeks[0]  # The cover page
-    cover_title: str = (
-        cover_page
-        .find(class_=["cardTitleBlock"])
-        .text
-        .strip()
-    )  # Extracting the text for each section (useful for getting things like title and week dates)
+    cover_title: str = cover_page.find(
+        class_=["cardTitleBlock"]
+    ).text.strip()  # Extracting the text for each section (useful for getting things like title and week dates)
     print(f"Document for {cover_title} is being processed. Please be patient. ")
     date_list = []
     links_per_page = []
 
     weeks = weeks[1:]  # The rest of the weeks' content
     for week in weeks:
-        links_per_page.append(week.a["href"])  # storing all the lists of the weeks' content
+        links_per_page.append(
+            week.a["href"]
+        )  # storing all the lists of the weeks' content
         date_list.append(
-            week
-            .a
-            .find(class_="cardTitleBlock")
-            .text
-            .strip()
+            week.a.find(class_="cardTitleBlock").text.strip()
         )  # storing all the dates/times of the weeks.
 
     return cover_title, date_list, links_per_page
@@ -104,12 +101,14 @@ async def _parse_week_content(url: str):
         print("ERROR FINDING `header` - SKIPPING... ")
         return None
 
-    pattern_for_song = re.compile(r'\b(?:Song|Orin|Pese)\s+\d+', re.IGNORECASE)
+    pattern_for_song = re.compile(r"\b(?:Song|Orin|Pese)\s+\d+", re.IGNORECASE)
 
     try:
         meeting_content = []
 
-        body_of_meeting_week_html = soup.find(class_="bodyTxt").find_all(class_="du-fontSize--base")
+        body_of_meeting_week_html = soup.find(class_="bodyTxt").find_all(
+            class_="du-fontSize--base"
+        )
 
         for element in body_of_meeting_week_html:
             if not pattern_for_song.search(element.text.strip()):
@@ -130,15 +129,23 @@ async def _parse_week_content(url: str):
     return parse_dict
 
 
-async def parse_workbook_url(month: Literal["January", "March", "May", "July", "September", "November"]):
+async def parse_workbook_url(
+    month: Literal["January", "March", "May", "July", "September", "November"],
+):
     print("Getting contents of url ...")
-    eng_url: str = "https://wol.jw.org/en/wol/library/r1/lp-e/all-publications/meeting-workbooks/life-and-ministry-meeting-workbook-2026/"
-    yoruba_url: str = "https://wol.jw.org/yo/wol/library/r36/lp-yr/gbogbo-%C3%ACt%E1%BA%B9j%C3%A1de/%C3%ACw%C3%A9-%C3%ACp%C3%A0d%C3%A9/%C3%ACw%C3%A9-%C3%ACp%C3%A0d%C3%A9-%C3%ACgb%C3%A9s%C3%AD-ay%C3%A9-%C3%A0ti-i%E1%B9%A3%E1%BA%B9-%C3%B2j%C3%AD%E1%B9%A3%E1%BA%B9-2026/"
-    soup = await _parse_url(yoruba_url + month.lower())
+    eng_url: str = (
+        "https://wol.jw.org/en/wol/library/r1/lp-e/all-publications/meeting-workbooks/life-and-ministry-meeting-workbook-2026/"
+    )
+    yoruba_url: str = (
+        "https://wol.jw.org/yo/wol/library/r36/lp-yr/gbogbo-%C3%ACt%E1%BA%B9j%C3%A1de/%C3%ACw%C3%A9-%C3%ACp%C3%A0d%C3%A9/%C3%ACw%C3%A9-%C3%ACp%C3%A0d%C3%A9-%C3%ACgb%C3%A9s%C3%AD-ay%C3%A9-%C3%A0ti-i%E1%B9%A3%E1%BA%B9-%C3%B2j%C3%AD%E1%B9%A3%E1%BA%B9-2026/"
+    )
+    soup = await _parse_url(eng_url + month.lower())
 
     cover_title, dates, links_per_page = await _extract_weeks_and_content(soup)
 
-    async_tasks = []  # Gather all web scrapping tasks and make them run at the same time to make them run faster.
+    async_tasks = (
+        []
+    )  # Gather all web scrapping tasks and make them run at the same time to make them run faster.
 
     for link in links_per_page:
         async_tasks.append(_parse_week_content(link))
@@ -147,8 +154,9 @@ async def parse_workbook_url(month: Literal["January", "March", "May", "July", "
 
 
 async def main():
-    for result in await parse_workbook_url("May"):
+    for result in await parse_workbook_url("September"):
         ic(result)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
